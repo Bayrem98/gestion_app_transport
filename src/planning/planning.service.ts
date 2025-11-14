@@ -5,6 +5,41 @@ import * as XLSX from 'xlsx';
 
 @Injectable()
 export class PlanningService {
+
+  async filtrerAgentsParPlanning(
+  planningData: PlanningData[], 
+  jour: string, 
+  typeTransport: 'Ramassage' | 'Départ'
+): Promise<string[]> {
+  const agentsFiltres: string[] = [];
+
+  for (const agentData of planningData) {
+    const planningJour = agentData[jour as keyof PlanningData] as string;
+    
+    if (!planningJour || this.estJourRepos(planningJour)) {
+      continue;
+    }
+
+    const heures = this.extraireHeures(planningJour);
+    if (!heures) continue;
+
+    if (typeTransport === 'Ramassage') {
+      // Ramassage: début à 6h, 7h ou 8h
+      if ([6, 7, 8].includes(heures.heureDebut)) {
+        agentsFiltres.push(agentData.Salarie);
+      }
+    } else {
+      // Départ: fin à 22h, 23h, 0h, 1h, 2h, 3h
+      // Note: 0h=minuit, 1h=1h du matin, etc.
+      const heureFinNormalisee = heures.heureFin >= 24 ? heures.heureFin - 24 : heures.heureFin;
+      if ([22, 23, 0, 1, 2, 3].includes(heureFinNormalisee)) {
+        agentsFiltres.push(agentData.Salarie);
+      }
+    }
+  }
+
+  return agentsFiltres;
+}
   
   async traiterFichierExcel(buffer: Buffer): Promise<PlanningData[]> {
     try {

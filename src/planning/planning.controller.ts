@@ -4,6 +4,7 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  Body,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PlanningService } from './planning.service';
@@ -13,6 +14,21 @@ import { PlanningData } from 'src/shared/types';
 @Controller('planning')
 export class PlanningController {
   constructor(private readonly planningService: PlanningService) {}
+
+@Post('filtrer-agents')
+async filtrerAgents(
+  @Body() filtreData: { 
+    jour: string; 
+    typeTransport: 'Ramassage' | 'Départ';
+    planningData: PlanningData[] 
+  },
+): Promise<string[]> {
+  return this.planningService.filtrerAgentsParPlanning(
+    filtreData.planningData,
+    filtreData.jour,
+    filtreData.typeTransport
+  );
+}
 
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
