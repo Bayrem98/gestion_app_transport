@@ -14,7 +14,7 @@ async function bootstrap() {
   // Global prefix
   app.setGlobalPrefix('api');
   
-  await app.listen(3000);
-  console.log('🚀 Application backend démarrée sur http://localhost:3000');
+  await app.listen(3001);
+  console.log('🚀 Application backend démarrée sur http://localhost:3001');
 }
 bootstrap();
