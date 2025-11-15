@@ -11,14 +11,18 @@ export interface Agent {
   createdAt?: Date;
 }
 
-export interface Affectation {
-  id?: string;
-  chauffeur: string;
-  heure: number;
+export interface AgentAffectation {
   agentNom: string;
   adresse: string;
   telephone: string;
   societe: string;
+}
+
+export interface Affectation {
+  _id?: string;
+  chauffeur: string;
+  heure: number;
+  agents: AgentAffectation[];
   vehicule: string;
   typeTransport: 'Ramassage' | 'Départ';
   jour: string;
@@ -26,7 +30,7 @@ export interface Affectation {
   dateReelle: string;
   prixCourse: number;
   statutPaiement: 'Non payé' | 'Payé';
-  createdAt?: Date;
+  createdAt?: string;
 }
 
 export interface AppConfig {

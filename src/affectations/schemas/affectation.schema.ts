@@ -1,14 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
-@Schema({ timestamps: true })
-export class Affectation extends Document {
-  @Prop({ required: true })
-  chauffeur: string;
-
-  @Prop({ required: true })
-  heure: number;
-
+@Schema({ _id: false })
+export class AgentAffectation {
   @Prop({ required: true })
   agentNom: string;
 
@@ -20,9 +14,33 @@ export class Affectation extends Document {
 
   @Prop({ required: true })
   societe: string;
+}
 
-  @Prop({ default: 'Non renseigné' })
-  vehicule: string;
+export const AgentAffectationSchema = SchemaFactory.createForClass(AgentAffectation);
+
+@Schema({ timestamps: true })
+export class Affectation extends Document {
+  @Prop({ required: true })
+  chauffeur: string;
+
+  @Prop({ required: true })
+  heure: number;
+
+  @Prop({ type: [AgentAffectationSchema], default: [] })
+  agents: AgentAffectation[];
+
+  // Anciens champs pour la rétrocompatibilité (rendus optionnels)
+  @Prop()
+  agentNom?: string;
+
+  @Prop()
+  adresse?: string;
+
+  @Prop()
+  telephone?: string;
+
+  @Prop()
+  societe?: string;
 
   @Prop({ required: true, enum: ['Ramassage', 'Départ'] })
   typeTransport: string;
@@ -36,11 +54,14 @@ export class Affectation extends Document {
   @Prop({ required: true })
   dateReelle: string;
 
-  @Prop({ required: true, default: 0 })
+  @Prop({ required: true })
   prixCourse: number;
 
-  @Prop({ default: 'Non payé', enum: ['Non payé', 'Payé'] })
+  @Prop({ required: true, enum: ['Non payé', 'Payé'] })
   statutPaiement: string;
+
+  @Prop()
+  vehicule?: string;
 }
 
 export const AffectationSchema = SchemaFactory.createForClass(Affectation);
