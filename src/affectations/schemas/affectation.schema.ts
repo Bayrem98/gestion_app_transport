@@ -24,7 +24,7 @@ export class Affectation extends Document {
   chauffeur: string;
 
   @Prop({ required: true })
-  heure: number;
+  heure: string;
 
   @Prop({ type: [AgentAffectationSchema], default: [] })
   agents: AgentAffectation[];
