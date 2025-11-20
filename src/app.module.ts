@@ -5,6 +5,7 @@ import { AgentsModule } from './agents/agents.module';
 import { AffectationsModule } from './affectations/affectations.module';
 import { PlanningModule } from './planning/planning.module';
 import { StatistiquesModule } from './statistiques/statistiques.module';
+import { ChauffeursModule } from './chauffeurs/chauffeurs.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { StatistiquesModule } from './statistiques/statistiques.module';
     AgentsModule,
     AffectationsModule,
     PlanningModule,
+    ChauffeursModule,
     // StatistiquesModule,
   ],
 })

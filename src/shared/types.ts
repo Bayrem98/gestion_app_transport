@@ -11,6 +11,17 @@ export interface Agent {
   createdAt?: Date;
 }
 
+export interface Chauffeur {
+  _id?: string;
+  nom: string;
+  cin: string;
+  telephone: string;
+  societe: string;
+  voiture: string;
+  createdAt?: string;
+}
+
+
 export interface AgentAffectation {
   agentNom: string;
   adresse: string;
