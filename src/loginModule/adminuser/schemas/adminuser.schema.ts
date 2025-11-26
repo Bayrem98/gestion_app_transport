@@ -4,7 +4,7 @@ import { Document } from 'mongoose';
 export type AdminuserDocument = Adminuser & Document;
 
 @Schema()
-export class Adminuser extends Document {
+export class Adminuser {
   @Prop({ required: true, type: String })
   username: string;
 

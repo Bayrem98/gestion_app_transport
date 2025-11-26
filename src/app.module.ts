@@ -4,20 +4,13 @@ import { ConfigModule } from '@nestjs/config';
 import { AgentsModule } from './agents/agents.module';
 import { AffectationsModule } from './affectations/affectations.module';
 import { PlanningModule } from './planning/planning.module';
-import { StatistiquesModule } from './statistiques/statistiques.module';
 import { ChauffeursModule } from './chauffeurs/chauffeurs.module';
-import { AdminuserController } from './loginModule/adminuser/adminuser.controller';
-import { AdminuserService } from './loginModule/adminuser/adminuser.service';
 import { AdminuserModule } from './loginModule/adminuser/adminuser.module';
-import { SupadminController } from './loginModule/supadmin/supadmin.controller';
-import { SupadminService } from './loginModule/supadmin/supadmin.service';
 import { SupadminModule } from './loginModule/supadmin/supadmin.module';
-import { UserController } from './loginModule/user/user.controller';
-import { UserService } from './loginModule/user/user.service';
 import { UserModule } from './loginModule/user/user.module';
-import { AuthController } from './auth/auth.controller';
-import { AuthService } from './auth/auth.service';
-import { AuthModule } from './auth/auth.module';
+import { AuthModule } from './loginModule/auth/auth.module';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
 @Module({
   imports: [
@@ -35,9 +28,8 @@ import { AuthModule } from './auth/auth.module';
     SupadminModule,
     UserModule,
     AuthModule,
-    // StatistiquesModule,
   ],
-  controllers: [AdminuserController, SupadminController, UserController, AuthController],
-  providers: [AdminuserService, SupadminService, UserService, AuthService],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}

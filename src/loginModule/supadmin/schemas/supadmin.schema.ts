@@ -4,7 +4,7 @@ import { Document } from 'mongoose';
 export type SupadminDocument = Supadmin & Document;
 
 @Schema()
-export class Supadmin extends Document {
+export class Supadmin {
   @Prop({ required: true, type: String })
   username: string;
 
