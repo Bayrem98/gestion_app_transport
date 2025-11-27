@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
-import { AgentsModule } from './agents/agents.module';
 import { AffectationsModule } from './affectations/affectations.module';
 import { PlanningModule } from './planning/planning.module';
 import { ChauffeursModule } from './chauffeurs/chauffeurs.module';
@@ -9,9 +8,8 @@ import { AdminuserModule } from './loginModule/adminuser/adminuser.module';
 import { SupadminModule } from './loginModule/supadmin/supadmin.module';
 import { UserModule } from './loginModule/user/user.module';
 import { AuthModule } from './loginModule/auth/auth.module';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { GeocodingModule } from './geocoding/geocoding.module';
+import { AgentsModule } from './agents/agents.module';
 
 @Module({
   imports: [
@@ -31,7 +29,7 @@ import { GeocodingModule } from './geocoding/geocoding.module';
     AuthModule,
     GeocodingModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}

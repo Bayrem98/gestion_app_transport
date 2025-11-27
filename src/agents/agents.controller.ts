@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseInterceptors, UploadedFile, Res } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { AgentsService } from './agents.service';
 import { Agent } from './schemas/agent.schema';
 
@@ -6,6 +7,7 @@ import { Agent } from './schemas/agent.schema';
 export class AgentsController {
   constructor(private readonly agentsService: AgentsService) {}
 
+  // ========== ROUTES GET SPÉCIFIQUES ==========
   @Get()
   async findAll(): Promise<Agent[]> {
     return this.agentsService.findAll();
@@ -26,14 +28,38 @@ export class AgentsController {
     return this.agentsService.getGeocodingStats();
   }
 
-  @Get(':id')
-  async findOne(@Param('id') id: string): Promise<Agent> {
-    return this.agentsService.findOne(id);
+  // ========== TOUTES LES ROUTES POST DOIVENT ÊTRE ICI ==========
+  @Post('import')
+  @UseInterceptors(FileInterceptor('file'))
+  async importAgents(@UploadedFile() file: Express.Multer.File) {
+    console.log('✅ Route POST /agents/import appelée !');
+    
+    if (!file) {
+      throw new Error('Aucun fichier uploadé');
+    }
+
+    const result = await this.agentsService.importAgentsFromFile(file);
+    return {
+      message: 'Importation réussie',
+      importedCount: result.importedCount,
+      errors: result.errors
+    };
   }
 
   @Post()
   async create(@Body() agentData: Partial<Agent>): Promise<Agent> {
     return this.agentsService.create(agentData);
+  }
+
+  @Post('geocode/all')
+  async geocodeAllAgents() {
+    return this.agentsService.geocodeAllAgentsWithoutCoordinates();
+  }
+
+  // ========== ROUTES AVEC PARAMÈTRES EN DERNIER ==========
+  @Get(':id')
+  async findOne(@Param('id') id: string): Promise<Agent> {
+    return this.agentsService.findOne(id);
   }
 
   @Put(':id')
@@ -52,11 +78,6 @@ export class AgentsController {
   @Post(':id/geocode')
   async geocodeAgent(@Param('id') id: string): Promise<Agent> {
     return this.agentsService.geocodeAgentAddress(id);
-  }
-
-  @Post('geocode/all')
-  async geocodeAllAgents() {
-    return this.agentsService.geocodeAllAgentsWithoutCoordinates();
   }
 
   @Delete(':id')

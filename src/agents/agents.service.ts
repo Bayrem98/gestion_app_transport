@@ -1,9 +1,11 @@
-// agents.service.ts
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Agent, AgentDocument } from './schemas/agent.schema';
 import { GeocodingService } from '../geocoding/geocoding.service';
+import * as XLSX from 'xlsx';
+import * as path from 'path';
+import * as fs from 'fs';
 
 @Injectable()
 export class AgentsService {
@@ -36,7 +38,11 @@ export class AgentsService {
     
     // Géocoder automatiquement l'adresse après création
     if (savedAgent._id) {
-      await this.geocodeAgentAddress(savedAgent._id.toString());
+      try {
+        await this.geocodeAgentAddress(savedAgent._id.toString());
+      } catch (error) {
+        this.logger.warn(`Échec géocodage automatique pour ${savedAgent.nom}: ${error.message}`);
+      }
     }
     
     return this.findOne(savedAgent._id.toString());
@@ -55,7 +61,11 @@ export class AgentsService {
 
     // Si l'adresse a changé, regéocoder
     if (agentData.adresse && agentData.adresse !== existingAgent.adresse) {
-      await this.geocodeAgentAddress(id);
+      try {
+        await this.geocodeAgentAddress(id);
+      } catch (error) {
+        this.logger.warn(`Échec géocodage après mise à jour pour ${agent.nom}: ${error.message}`);
+      }
     }
 
     return this.findOne(id);
@@ -77,11 +87,120 @@ export class AgentsService {
     return planningAgents.filter(nom => !nomsAgentsExistants.includes(nom));
   }
 
-  // NOUVELLES MÉTHODES POUR LE GÉOCODAGE
+  // NOUVELLES MÉTHODES POUR L'IMPORTATION
+
+ /**
+ * Importer des agents depuis un fichier Excel ou CSV
+ */
+async importAgentsFromFile(file: Express.Multer.File): Promise<{ importedCount: number; errors: string[] }> {
+  try {
+    this.logger.log(`Importation du fichier: ${file.originalname}`);
+    
+    const workbook = XLSX.read(file.buffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    
+    // Convertir en JSON
+    const data = XLSX.utils.sheet_to_json(worksheet);
+    
+    // DEBUG: Afficher la structure du fichier
+    console.log('=== DEBUG STRUCTURE FICHIER ===');
+    console.log('Nombre de lignes:', data.length);
+    if (data.length > 0) {
+      console.log('Première ligne:', data[0]);
+      console.log('Clés de la première ligne:', Object.keys(data[0] as object));
+    }
+    console.log('=== FIN DEBUG ===');
+    
+    let importedCount = 0;
+    const errors: string[] = [];
+
+    for (let i = 0; i < data.length; i++) {
+      try {
+        const row = data[i] as any;
+        const rowNumber = i + 2; // +2 car ligne 1 = en-têtes, et i commence à 0
+
+        // Normaliser les noms de colonnes (gérer minuscules/majuscules)
+        const normalizedRow = this.normalizeRowData(row);
+
+        // Validation des champs requis avec noms normalisés
+        if (!normalizedRow.nom || !normalizedRow.telephone || !normalizedRow.adresse || !normalizedRow.societe) {
+          errors.push(`Ligne ${rowNumber}: Champs requis manquants (nom, telephone, adresse, societe)`);
+          continue;
+        }
+
+        // Vérifier si l'agent existe déjà
+        const existingAgent = await this.findByNom(normalizedRow.nom);
+        if (existingAgent) {
+          errors.push(`Ligne ${rowNumber}: Agent "${normalizedRow.nom}" existe déjà`);
+          continue;
+        }
+
+        // Préparer les données de l'agent
+        const agentData: Partial<Agent> = {
+          nom: normalizedRow.nom,
+          telephone: normalizedRow.telephone,
+          adresse: normalizedRow.adresse,
+          societe: normalizedRow.societe,
+          voiturePersonnelle: this.parseBoolean(normalizedRow.voiturepersonnelle || normalizedRow.voitureperso || normalizedRow['voiture perso']),
+          chauffeurNom: normalizedRow.chauffeurnom || '',
+          vehiculeChauffeur: normalizedRow.vehiculechauffeur || '',
+        };
+
+        // Créer l'agent
+        await this.create(agentData);
+        importedCount++;
+
+        this.logger.log(`Agent importé: ${normalizedRow.nom}`);
+
+      } catch (error) {
+        errors.push(`Ligne ${i + 2}: ${error.message}`);
+      }
+    }
+
+    this.logger.log(`Importation terminée: ${importedCount} agents importés, ${errors.length} erreurs`);
+    
+    return { importedCount, errors };
+
+  } catch (error) {
+    this.logger.error('Erreur lors de l\'importation du fichier:', error);
+    throw new Error(`Erreur lors de l'importation: ${error.message}`);
+  }
+}
+
+/**
+ * Normaliser les noms de colonnes pour gérer différentes casse
+ */
+private normalizeRowData(row: any): any {
+  const normalized: any = {};
+  
+  for (const key in row) {
+    if (row.hasOwnProperty(key)) {
+      // Convertir en minuscules et supprimer les espaces
+      const normalizedKey = key.toLowerCase().replace(/\s+/g, '');
+      normalized[normalizedKey] = row[key];
+    }
+  }
+  
+  return normalized;
+}
 
   /**
-   * Géocoder l'adresse d'un agent
+   * Parser les valeurs booléennes
    */
+  private parseBoolean(value: any): boolean {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'string') {
+      return value.toLowerCase() === 'true' || value.toLowerCase() === 'oui' || value === '1';
+    }
+    if (typeof value === 'number') {
+      return value === 1;
+    }
+    return false;
+  }
+
+  // MÉTHODES EXISTANTES POUR LE GÉOCODAGE
+
   async geocodeAgentAddress(agentId: string): Promise<Agent> {
     try {
       const agent = await this.findOne(agentId);
@@ -114,9 +233,6 @@ export class AgentsService {
     }
   }
 
-  /**
-   * Géocoder tous les agents sans coordonnées
-   */
   async geocodeAllAgentsWithoutCoordinates(): Promise<{ success: number; errors: number }> {
     try {
       const agentsSansCoords = await this.agentModel.find({
@@ -157,9 +273,6 @@ export class AgentsService {
     }
   }
 
-  /**
-   * Mettre à jour les coordonnées d'un agent
-   */
   async updateCoordinates(agentId: string, latitude: number, longitude: number): Promise<Agent> {
     try {
       const agent = await this.agentModel.findByIdAndUpdate(
@@ -185,9 +298,6 @@ export class AgentsService {
     }
   }
 
-  /**
-   * Trouver les agents sans coordonnées GPS
-   */
   async findWithoutCoordinates(): Promise<Agent[]> {
     return this.agentModel.find({
       $or: [
@@ -199,9 +309,6 @@ export class AgentsService {
     }).exec();
   }
 
-  /**
-   * Trouver les agents avec coordonnées GPS
-   */
   async findWithCoordinates(): Promise<Agent[]> {
     return this.agentModel.find({
       latitude: { $exists: true, $ne: null },
@@ -209,9 +316,6 @@ export class AgentsService {
     }).exec();
   }
 
-  /**
-   * Obtenir les statistiques de géocodage
-   */
   async getGeocodingStats(): Promise<{
     total: number;
     withCoordinates: number;
