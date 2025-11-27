@@ -1,13 +1,4 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Put, 
-  Delete, 
-  Body, 
-  Param, 
-  NotFoundException 
-} from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
 import { AgentsService } from './agents.service';
 import { Agent } from './schemas/agent.schema';
 
@@ -20,18 +11,24 @@ export class AgentsController {
     return this.agentsService.findAll();
   }
 
+  @Get('without-coordinates')
+  async findWithoutCoordinates(): Promise<Agent[]> {
+    return this.agentsService.findWithoutCoordinates();
+  }
+
+  @Get('with-coordinates')
+  async findWithCoordinates(): Promise<Agent[]> {
+    return this.agentsService.findWithCoordinates();
+  }
+
+  @Get('geocoding-stats')
+  async getGeocodingStats() {
+    return this.agentsService.getGeocodingStats();
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Agent> {
     return this.agentsService.findOne(id);
-  }
-
-  @Get('nom/:nom')
-  async findByNom(@Param('nom') nom: string): Promise<Agent> {
-    const agent = await this.agentsService.findByNom(nom);
-    if (!agent) {
-      throw new NotFoundException(`Agent avec le nom ${nom} non trouvé`);
-    }
-    return agent;
   }
 
   @Post()
@@ -40,20 +37,30 @@ export class AgentsController {
   }
 
   @Put(':id')
-  async update(
-    @Param('id') id: string,
-    @Body() agentData: Partial<Agent>,
-  ): Promise<Agent> {
+  async update(@Param('id') id: string, @Body() agentData: Partial<Agent>): Promise<Agent> {
     return this.agentsService.update(id, agentData);
+  }
+
+  @Put(':id/coordinates')
+  async updateCoordinates(
+    @Param('id') id: string,
+    @Body() coordinates: { latitude: number; longitude: number }
+  ): Promise<Agent> {
+    return this.agentsService.updateCoordinates(id, coordinates.latitude, coordinates.longitude);
+  }
+
+  @Post(':id/geocode')
+  async geocodeAgent(@Param('id') id: string): Promise<Agent> {
+    return this.agentsService.geocodeAgentAddress(id);
+  }
+
+  @Post('geocode/all')
+  async geocodeAllAgents() {
+    return this.agentsService.geocodeAllAgentsWithoutCoordinates();
   }
 
   @Delete(':id')
   async delete(@Param('id') id: string): Promise<void> {
     return this.agentsService.delete(id);
-  }
-
-  @Post('verifier-manquants')
-  async verifierAgentsManquants(@Body() nomsAgents: string[]): Promise<string[]> {
-    return this.agentsService.findAgentsManquants(nomsAgents);
   }
 }

@@ -11,6 +11,7 @@ import { UserModule } from './loginModule/user/user.module';
 import { AuthModule } from './loginModule/auth/auth.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { GeocodingModule } from './geocoding/geocoding.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { AppService } from './app.service';
     SupadminModule,
     UserModule,
     AuthModule,
+    GeocodingModule,
   ],
   controllers: [AppController],
   providers: [AppService],
