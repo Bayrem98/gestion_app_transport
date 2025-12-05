@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 @Schema({ _id: false })
 export class AgentAffectation {
@@ -63,5 +63,9 @@ export class Affectation extends Document {
   @Prop()
   vehicule?: string;
 }
+
+export type AffectationDocument = Affectation & Document & {
+  _id: Types.ObjectId;
+};
 
 export const AffectationSchema = SchemaFactory.createForClass(Affectation);

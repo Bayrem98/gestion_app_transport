@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Affectation } from './schemas/affectation.schema';
+import { Affectation, AffectationDocument } from './schemas/affectation.schema';
 
 @Injectable()
 export class AffectationsService {
   constructor(
-    @InjectModel(Affectation.name) private affectationModel: Model<Affectation>,
+    @InjectModel(Affectation.name) private affectationModel: Model<AffectationDocument>,
   ) {}
 
   // Méthode pour normaliser les données (ancien format → nouveau format)
