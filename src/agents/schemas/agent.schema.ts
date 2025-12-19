@@ -13,8 +13,12 @@ export class Agent extends Document {
   @Prop({ required: true })
   telephone: string;
 
-  @Prop({ required: true })
-  societe: string;
+  @Prop({ 
+    type: Types.ObjectId, 
+    ref: 'Societe', 
+    required: true 
+  })
+  societe: Types.ObjectId;
 
   @Prop({ default: false })
   voiturePersonnelle: boolean;

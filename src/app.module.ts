@@ -10,6 +10,7 @@ import { UserModule } from './loginModule/user/user.module';
 import { AuthModule } from './loginModule/auth/auth.module';
 import { GeocodingModule } from './geocoding/geocoding.module';
 import { AgentsModule } from './agents/agents.module';
+import { SocieteModule } from './societe/societe.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AgentsModule } from './agents/agents.module';
     MongooseModule.forRoot(
       `mongodb+srv://${process.env.MONGODB_USER}:${process.env.MONGODB_PASSWORD}@${process.env.MONGODB_CLUSTER}.gjbdf3j.mongodb.net/${process.env.MONGODB_DATABASE}?retryWrites=true&w=majority`,
     ),
+    SocieteModule,
     AgentsModule,
     AffectationsModule,
     PlanningModule,
